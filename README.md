@@ -69,6 +69,10 @@ The rules come from real client feedback ([docs/editing_rules.md](docs/editing_r
 - **Cold open in the style of *The Diary Of A CEO*:** 4 strong quotes (a number, a conflict, a personal admission), zoom transitions with a whoosh, music chosen by the client.
 - **Pauses over 0.4 s → ~0.25 s; hesitations → 0.2 s; filler words and false starts are removed**, and the text at every cut is checked.
 
+Cold-open typography — words appear exactly when they are spoken (illustration, example phrase):
+
+![cold open words](examples/cold_open_words.jpg)
+
 `shots.py` report after each build:
 ```
 shots 46   duration min/median/max 2.3 9.0 61.5
@@ -101,6 +105,19 @@ cd interview
 ../.venv/bin/python edit.py && ../.venv/bin/python shots.py
 ../.venv/bin/python lower_thirds.py && ../.venv/bin/python graphics.py && ../.venv/bin/python sfx.py
 ../.venv/bin/python render.py                      # → $MONTAGE_PROJECT/output/final.mp4
+```
+
+Or run the two stages with one command each:
+
+```bash
+./run_interview.sh ~/Projects/my-interview analyze   # steps 1–5
+./run_interview.sh ~/Projects/my-interview build     # steps 6–9, after the agent has filled project.json
+```
+
+Tests (synthetic audio, no real recordings — camera sync accuracy, hesitation detection, all scripts compile):
+
+```bash
+python -m pytest tests/ -q
 ```
 
 The prompt the agent works from: [docs/agent_prompt.md](docs/agent_prompt.md).

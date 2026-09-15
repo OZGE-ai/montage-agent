@@ -6,12 +6,12 @@
 Выход: work/voiced_runs.json — используется в edit.py."""
 import json
 import numpy as np, soundfile as sf
-from common import P
 
 SR, HOP, WIN = 16000, 160, 640
 
-if __name__ == "__main__":
-    A, _ = sf.read(P + "work/master_A_16k.wav", dtype="float32")
+def detect_runs(A):
+    """Голосовые участки ≥0.25 с с признаками: длительность, коэф. вариации тона, медианное изменение тембра.
+    Возвращает (runs, flux_p25)."""
     nfr = (len(A) - WIN) // HOP
     voiced = np.zeros(nfr, bool); f0 = np.zeros(nfr, np.float32)
     win = np.hanning(WIN).astype(np.float32)
@@ -37,7 +37,16 @@ if __name__ == "__main__":
                 runs.append(dict(t0=round(s * HOP / SR, 2), t1=round(j * HOP / SR, 2), d=round((j - s) * HOP / SR, 2),
                                  cv=round(float(np.std(ff) / np.mean(ff)), 3), flux=round(float(np.median(flux[s:j])), 2)))
             s = None
-    p25 = float(np.percentile(flux[voiced], 25))
+    return runs, float(np.percentile(flux[voiced], 25)) if voiced.any() else 0.0
+
+
+def hesitation_candidates(runs, flux_p25):
+    return [r for r in runs if r["d"] >= 0.30 and r["cv"] < 0.06 and r["flux"] < flux_p25]
+
+
+if __name__ == "__main__":
+    from common import P
+    A, _ = sf.read(P + "work/master_A_16k.wav", dtype="float32")
+    runs, p25 = detect_runs(A)
     json.dump(dict(flux_p25=p25, runs=runs), open(P + "work/voiced_runs.json", "w"))
-    cand = [r for r in runs if r["d"] >= 0.30 and r["cv"] < 0.06 and r["flux"] < p25]
-    print("голосовых участков ≥0.25 с:", len(runs), "| кандидатов в «э-э»:", len(cand), "| порог тембра", round(p25, 2))
+    print("голосовых участков ≥0.25 с:", len(runs), "| кандидатов в «э-э»:", len(hesitation_candidates(runs, p25)), "| порог тембра", round(p25, 2))

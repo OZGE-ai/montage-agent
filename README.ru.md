@@ -69,6 +69,10 @@ flowchart LR
 - **Перебивка в стиле The Diary Of A CEO:** 4 сильные фразы (цифра, конфликт, личное признание), переходы «зумом» со звуком, музыка по выбору заказчика.
 - **Паузы длиннее 0,4 с → ~0,25 с; «э-э» → 0,2 с; паразиты и неправильные повторы вырезаются**, но каждая вырезка проверяется по тексту на стыке.
 
+Типографика перебивки — слова появляются ровно тогда, когда их произносят (иллюстрация, фраза условная):
+
+![слова перебивки](examples/cold_open_words.jpg)
+
 Отчёт `shots.py` после каждой сборки:
 ```
 планов 46 длит. мин/медиана/макс 2.3 9.0 61.5
@@ -101,6 +105,19 @@ cd interview
 ../.venv/bin/python edit.py && ../.venv/bin/python shots.py
 ../.venv/bin/python lower_thirds.py && ../.venv/bin/python graphics.py && ../.venv/bin/python sfx.py
 ../.venv/bin/python render.py                      # → $MONTAGE_PROJECT/output/final.mp4
+```
+
+Или два этапа — по одной команде:
+
+```bash
+./run_interview.sh ~/Projects/my-interview analyze   # шаги 1–5
+./run_interview.sh ~/Projects/my-interview build     # шаги 6–9, после того как агент заполнил project.json
+```
+
+Тесты (синтетический звук, без реальных записей — точность синхронизации, поиск «э-э», компиляция всех скриптов):
+
+```bash
+python -m pytest tests/ -q
 ```
 
 Промпт, по которому работает агент, — [docs/agent_prompt.ru.md](docs/agent_prompt.ru.md).

@@ -9,24 +9,23 @@
 import json, subprocess
 import numpy as np
 from scipy.signal import correlate
-from common import CFG, CAMS, P, PROJECT, cam_file
 
 SR = 8000
-FPS = CFG.get("fps", 30)
 
 
 def load(cam):
+    from common import cam_file
     raw = subprocess.check_output(["ffmpeg", "-v", "error", "-i", cam_file(cam), "-vn", "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"])
     return np.frombuffer(raw, np.float32)
 
 
-def offset(ref, tgt, t0, t1):
+def offset(ref, tgt, t0, t1, sr=SR):
     """time_in_tgt = time_in_ref + offset"""
-    r = ref[int(t0 * SR):int(t1 * SR)]
+    r = ref[int(t0 * sr):int(t1 * sr)]
     c = correlate(tgt, r, mode="full", method="fft")
     lag = int(np.argmax(np.abs(c))) - (len(r) - 1)
-    pk = float(np.abs(c).max()); floor = float(np.sort(np.abs(c))[-5000:-100].mean())
-    return (lag - t0 * SR) / SR, pk / floor
+    a = np.sort(np.abs(c)); pk = float(a[-1]); floor = float(a[-min(5000, len(a) - 1):-min(100, len(a) - 1)].mean()) if len(a) > 200 else 1e-9
+    return (lag - t0 * sr) / sr, pk / (floor + 1e-12)
 
 
 def stats(x):
@@ -37,6 +36,8 @@ def stats(x):
 
 
 if __name__ == "__main__":
+    from common import CFG, CAMS, PROJECT
+    FPS = CFG.get("fps", 30)
     audio = {c: load(c) for c in CAMS}
     dur = min(len(x) for x in audio.values()) / SR
     probes = [(dur * f, dur * f + 60) for f in (0.1, 0.45, 0.8)]
