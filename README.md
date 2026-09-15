@@ -1,93 +1,95 @@
-# Montage Agent — ИИ-агент монтажа интервью и видеоуроков
+# Montage Agent — an AI agent that edits interviews and video lessons
 
-**Команда:** Ozge media (Астана) · **Хакатон:** AI Alem
+🇷🇺 [Русская версия](README.ru.md)
 
-Агент получает сырые исходники (три камеры и звук интервью или урок со слайдами) и собирает готовый ролик: синхронизирует камеры, расшифровывает речь, вырезает паузы, «э-э» и неправильные повторы, выбирает камеру по взгляду говорящего, делает перебивку из сильных фраз, плашки ФИО, заставку и финал. Правки заказчика («переходы плавнее», «на общем плане я не должна читать с листа») агент превращает в проверяемые правила и пересобирает ролик.
+**Team:** Ozge media (Astana, Kazakhstan) · **Hackathon:** AI Alem
 
-🎬 **Демо:** [`demo/lesson_demo_asel_60s.mp4`](demo/lesson_demo_asel_60s.mp4) — первая минута урока ASI «Социальное предпринимательство: бизнес-модели и устойчивость» (спикер — Асель Аймушева). Субтитры на казахском, плашка ФИО и анимированные панели слайдов сделаны агентом.
+The agent takes raw footage (a three-camera interview, or a single-speaker lesson with slides) and delivers a finished video. It syncs the cameras, transcribes the speech, and cuts pauses, "uh"/"um" hesitations and false starts. It picks the camera by where the speaker is looking and builds a cold open from the strongest quotes. It also adds name titles, a title card and an end card. Client feedback such as "make the transitions smoother" or "don't show me reading from my notes in the wide shot" becomes a checkable rule, and the agent re-renders the video.
 
-![кадр урока](examples/lesson_frame.jpg)
+🎬 **Demo:** [`demo/lesson_demo_asel_60s.mp4`](demo/lesson_demo_asel_60s.mp4) — the first minute of an ASI course lesson, *Social Entrepreneurship: Business Models and Sustainability* (speaker: Asel Aimusheva). The Kazakh subtitles, the name title and the animated slide panels were produced by the agent.
+
+![lesson frame](examples/lesson_frame.jpg)
 
 ---
 
-## Проблема
+## Problem
 
-Соцпредпринимателям, НКО и организаторам мероприятий в Казахстане нужно много видео: интервью со спикеров, уроки, отчёты. Монтаж одного интервью на три камеры у монтажёра занимает 1–2 дня. Большая часть этого времени уходит на рутину: синхронизацию, чистку речи, переключение камер, титры.
+Social entrepreneurs, NGOs and event organisers in Kazakhstan need a lot of video: speaker interviews, lessons, event recaps. A human editor spends 1–2 days on a single three-camera interview. Most of that time is routine work: syncing cameras, cleaning up speech, switching angles, adding titles.
 
-## Решение
+## Solution
 
-LLM-агент (Claude Code) управляет конвейером из небольших проверяемых скриптов. Скрипты делают тяжёлую работу со звуком и видео. Агент читает расшифровку, принимает решения монтажёра, показывает монтажный лист на утверждение и вносит правки.
+An LLM agent (Claude Code) drives a pipeline of small, verifiable scripts. The scripts do the heavy audio and video work. The agent reads the transcript, makes the editorial decisions, shows the edit decision list for approval and applies the client's changes.
 
-| | Монтажёр | Агент |
+| | Human editor | Agent |
 |---|---|---|
-| Интервью 17 мин, 3 камеры → ролик 13:49 | 1–2 дня | ~2 часа с правками, рендер ~12 мин на MacBook M1 (8 ГБ) |
-| Вырезано пауз, «э-э», паразитов, повторов | вручную | 149 мест (~2,5 мин) |
-| Правки заказчика | переделка руками | 4 версии ролика по правкам, правила копятся |
+| 17-min interview, 3 cameras → 13:49 video | 1–2 days | ~2 hours including revisions; render ~12 min on a MacBook M1 (8 GB) |
+| Pauses, hesitations, filler words, false starts removed | by hand | 149 cuts (~2.5 min) |
+| Client revisions | redone by hand | 4 versions, rules accumulate |
 
-## Как работает (режим «интервью»)
+## How it works (interview mode)
 
 ```mermaid
 flowchart LR
-    S[3 камеры] --> SY[sync.py<br/>офсеты по звуку]
-    SY --> TR[transcribe.py<br/>whisper, 2 прохода]
-    TR --> SP[speakers_f0.py<br/>кто говорит — по тону]
-    S --> GZ[gaze.py<br/>взгляд, чтение с листа]
-    TR --> HS[hesitations.py<br/>э-э по звуку]
-    SP --> AG{{LLM-агент<br/>вырезки, триггеры}}
-    HS --> ED[edit.py<br/>куски программы]
+    S[3 cameras] --> SY[sync.py<br/>offsets from audio]
+    SY --> TR[transcribe.py<br/>whisper, 2 passes]
+    TR --> SP[speakers_f0.py<br/>who speaks — by pitch]
+    S --> GZ[gaze.py<br/>gaze, reading notes]
+    TR --> HS[hesitations.py<br/>uh/um from audio]
+    SP --> AG{{LLM agent<br/>cuts, cold-open quotes}}
+    HS --> ED[edit.py<br/>program pieces]
     AG --> ED
-    ED --> SH[shots.py<br/>выбор камер]
+    ED --> SH[shots.py<br/>camera selection]
     GZ --> SH
-    SH --> RN[render.py<br/>сборка, звук −16 LUFS]
-    GR[graphics.py<br/>триггеры, заставка, финал] --> RN
+    SH --> RN[render.py<br/>assembly, −16 LUFS]
+    GR[graphics.py<br/>quotes, title, end card] --> RN
     RN --> F[final.mp4]
 ```
 
-| Шаг | Скрипт | Что делает |
+| Step | Script | What it does |
 |---|---|---|
-| 1 | `sync.py` | Синхронизирует камеры кросс-корреляцией звука на трёх участках, проверяет дрейф, выбирает мастер-звук |
-| 2 | `transcribe.py` | faster-whisper large-v3-turbo с пословными таймкодами: обычный проход и дословный (паразиты, оговорки) |
-| 3 | `speakers_f0.py` | Размечает «ведущая / гость» по основному тону голоса и уровню на крупных камерах |
-| 4 | `gaze.py` | MediaPipe FaceMesh: смотрит ли человек в центральную камеру или на собеседника; читает ли ведущая с листа (раскрытие век) |
-| 5 | `hesitations.py` | Находит «э-э», «м-м» и растянутые гласные по звуку (ровный тон + неподвижный тембр) — whisper их не пишет |
-| 6 | `edit.py` | Строит программу: вырезки агента (паразиты, повторы, «по смыслу») + паузы и запинки. Точки склейки ставит в тишине |
-| 7 | `shots.py` | Выбирает камеры по правилам (см. ниже) и сам проверяет их выполнение |
-| 8 | `graphics.py`, `lower_thirds.py` | Фразы-триггеры со словами в ритм речи, заставка поверх видео мероприятия, плашки ФИО, финал с логотипами |
-| 9 | `render.py` | Собирает видео кусками с растворениями, звук с кроссфейдами и лимитером, нормализует по EBU R128 |
+| 1 | `sync.py` | Syncs cameras by audio cross-correlation on three stretches of the recording, checks drift, picks the master audio |
+| 2 | `transcribe.py` | faster-whisper large-v3-turbo with word timestamps: a normal pass and a verbatim pass (filler words, false starts) |
+| 3 | `speakers_f0.py` | Labels host / guest by voice pitch and level on the close-up cameras |
+| 4 | `gaze.py` | MediaPipe FaceMesh: is the person looking into the centre camera or at the other person; is the host reading from her notes (eyelid opening) |
+| 5 | `hesitations.py` | Finds "uh", "um" and drawn-out vowels from the audio (steady pitch + static timbre) — whisper does not transcribe them |
+| 6 | `edit.py` | Builds the program: agent cuts (filler words, false starts, content cuts) + pauses and hesitations. Cut points are placed in silence |
+| 7 | `shots.py` | Picks cameras by the rules below and verifies them itself |
+| 8 | `graphics.py`, `lower_thirds.py` | Cold-open quotes with words appearing in time with speech, title card over event footage, name titles, end card with logos |
+| 9 | `render.py` | Assembles the video in pieces with cross-dissolves, audio with crossfades and a limiter, EBU R128 loudness normalisation |
 
-### Правила монтажа, которые агент выполняет и проверяет
+### Editing rules the agent follows and checks
 
-Правила появились из реальных правок заказчика ([docs/editing_rules.md](docs/editing_rules.md)):
+The rules come from real client feedback ([docs/editing_rules.md](docs/editing_rules.md)):
 
-- **Крупный план — только того, кто говорит.** План не переходит через смену говорящего.
-- **Контакт со зрителем.** Взгляд в центральную камеру → общий план; вступление ведущей целиком на центральной камере.
-- **Общий план — только когда ведущая слушает гостя**, а не читает вопросы с листа.
-- **Декор в центре кадра** (корпе) — только на общем плане; крупный план ведущей кадрируется без него.
-- **Никаких резких «близко–далеко».** Склейки — мягкое растворение 0,2–0,3 с.
-- **Перебивка в стиле The Diary Of A CEO:** 4 сильные фразы (цифра, конфликт, личное признание), переходы «зумом» со звуком, музыка по выбору заказчика.
-- **Паузы длиннее 0,4 с → ~0,25 с; «э-э» → 0,2 с; паразиты и неправильные повторы вырезаются**, но каждая вырезка проверяется по тексту на стыке.
+- **A close-up shows only the person who is speaking.** A shot never runs across a change of speaker.
+- **Eye contact with the viewer.** Looking into the centre camera → wide shot; the host's introduction runs entirely on the centre camera.
+- **Wide shot only while the host is listening to the guest**, not while she is reading questions from her notes.
+- **The centre-of-frame decor** (traditional *körpe* quilts) appears only in wide shots; the host's close-up is cropped to exclude it.
+- **No jarring close–wide–close jumps.** Every cut is a soft 0.2–0.3 s dissolve.
+- **Cold open in the style of *The Diary Of A CEO*:** 4 strong quotes (a number, a conflict, a personal admission), zoom transitions with a whoosh, music chosen by the client.
+- **Pauses over 0.4 s → ~0.25 s; hesitations → 0.2 s; filler words and false starts are removed**, and the text at every cut is checked.
 
-Отчёт `shots.py` после каждой сборки:
+`shots.py` report after each build:
 ```
-планов 46 длит. мин/медиана/макс 2.3 9.0 61.5
-крупный не того, кто говорит (>1 с): []
-общие, где ведущая читает >15%: []
+shots 46   duration min/median/max 2.3 9.0 61.5
+close-up of the wrong speaker (>1 s): []
+wide shots where the host reads >15%: []
 ```
 
-## Режим «урок» (`lesson/`)
+## Lesson mode (`lesson/`)
 
-Один спикер + презентация. Агент рендерит слайды, вырезает дубли и паузы, собирает текстовые панели и анимированную инфографику из дека, делает субтитры ru → kk и финальную плашку. Порядок шагов — в [lesson/PIPELINE.md](lesson/PIPELINE.md). Этим режимом собран демо-урок.
+One speaker plus a slide deck. The agent renders the slides and cuts retakes and pauses. It builds text panels and animated infographics from the deck, makes ru → kk subtitles and adds the end card. Step order is in [lesson/PIPELINE.md](lesson/PIPELINE.md) (in Russian). The demo lesson was produced in this mode.
 
-## Запуск
+## Running it
 
-Нужны Python 3.11, ffmpeg и шрифт Montserrat (variable) в `assets/fonts/`.
+Requires Python 3.11, ffmpeg and the Montserrat variable font in `assets/fonts/`.
 
 ```bash
 python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
-export MONTAGE_PROJECT=~/Projects/my-interview     # папка проекта
+export MONTAGE_PROJECT=~/Projects/my-interview     # project folder
 cp examples/project.example.json  $MONTAGE_PROJECT/project.json
 cp examples/speakers.example.json $MONTAGE_PROJECT/data/speakers.json
-# исходники: $MONTAGE_PROJECT/source/…, музыка и логотипы: $MONTAGE_PROJECT/assets/…
+# footage: $MONTAGE_PROJECT/source/…, music and logos: $MONTAGE_PROJECT/assets/…
 
 cd interview
 ../.venv/bin/python sync.py
@@ -95,28 +97,30 @@ cd interview
 ../.venv/bin/python speakers_f0.py
 ../.venv/bin/python gaze.py close && ../.venv/bin/python gaze.py wide && ../.venv/bin/python gaze.py eyes
 ../.venv/bin/python hesitations.py
-# ← агент читает расшифровку, заполняет edits / triggers / host_segments в project.json, заказчик утверждает монтажный лист
+# ← the agent reads the transcript, fills edits / triggers / host_segments in project.json; the client approves the edit list
 ../.venv/bin/python edit.py && ../.venv/bin/python shots.py
 ../.venv/bin/python lower_thirds.py && ../.venv/bin/python graphics.py && ../.venv/bin/python sfx.py
 ../.venv/bin/python render.py                      # → $MONTAGE_PROJECT/output/final.mp4
 ```
 
-Промпт, по которому работает агент, — [docs/agent_prompt.md](docs/agent_prompt.md).
+The prompt the agent works from: [docs/agent_prompt.md](docs/agent_prompt.md).
 
-## Что внутри технически
+## Under the hood
 
-- **Синхронизация без хлопушки:** FFT-корреляция звука на трёх участках; для реального интервью дрейф за 13 минут < 4 мс.
-- **Запинки по звуку:** автокорреляция через спектр (голос/тон), изменение спектральных полос за 50 мс (тембр). Вырезается только ровный голос, который держится ≥0,3 с.
-- **Паузы, в которых на самом деле есть речь:** если whisper пропустил слово, в паузе есть голос с меняющимся тоном — такую паузу агент не режет.
-- **Взгляд:** поворот головы (нос относительно глаз) + положение зрачков; чтение с листа — раскрытие век < 0,30 со сглаживанием против морганий.
-- **Сборка на 8 ГБ RAM:** видео кодируется кусками с точным числом кадров и склеивается без перекодирования; растворения делаются внутри кусков через `xfade` с продолжением предыдущего источника, поэтому звук не сдвигается.
+- **Sync without a clapper:** FFT cross-correlation of the audio on three stretches; on the real interview the drift over 13 minutes was under 4 ms.
+- **Hesitations from audio:** autocorrelation via the spectrum (voicing and pitch) plus how much the spectral bands change over 50 ms (timbre). Only steady voicing lasting ≥0.3 s is cut.
+- **Pauses that actually contain speech:** if whisper missed a word, the pause contains voicing with changing pitch — the agent does not cut such pauses.
+- **Gaze:** head turn (nose relative to the eyes) + iris position; reading notes = eyelid opening < 0.30, smoothed to ignore blinks.
+- **Rendering on 8 GB RAM:** video is encoded in pieces with exact frame counts and joined without re-encoding. Dissolves are made inside the pieces with `xfade`, continuing the previous source, so the audio never drifts.
 
-## Данные и права
+Code comments and console messages are in Russian — the tool was built for a Russian- and Kazakh-speaking production team.
 
-- Исходники интервью, расшифровки и настройки реального проекта в репозиторий не входят (персональные данные спикеров).
-- Музыка в демо-уроке: *Inspired* — Kevin MacLeod (incompetech.com), CC BY 4.0.
-- Звук перехода «чух» и запасная напряжённая музыка синтезируются кодом (`sfx.py`, `music_tension.py`) — без сторонних сэмплов.
+## Data and rights
 
-## Лицензия
+- Interview footage, transcripts and the real project's settings are not included (speakers' personal data).
+- Music in the demo lesson: *Inspired* — Kevin MacLeod (incompetech.com), CC BY 4.0.
+- The transition whoosh and the fallback tension music are synthesised in code (`sfx.py`, `music_tension.py`) — no third-party samples.
 
-MIT — см. [LICENSE](LICENSE).
+## License
+
+MIT — see [LICENSE](LICENSE).
