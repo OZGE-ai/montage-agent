@@ -6,6 +6,8 @@
 
 The agent takes raw footage (a three-camera interview, or a single-speaker lesson with slides) and delivers a finished video. It syncs the cameras, transcribes the speech, and cuts pauses, "uh"/"um" hesitations and false starts. It picks the camera by where the speaker is looking and builds a cold open from the strongest quotes. It also adds name titles, a title card and an end card. Client feedback such as "make the transitions smoother" or "don't show me reading from my notes in the wide shot" becomes a checkable rule, and the agent re-renders the video.
 
+▶️ **Video demo (1:45, YouTube):** https://youtu.be/GARec2zQ-ng
+
 🎬 **Demo:** [`demo/lesson_demo_asel_60s.mp4`](demo/lesson_demo_asel_60s.mp4) — the first minute of an ASI course lesson, *Social Entrepreneurship: Business Models and Sustainability* (speaker: Asel Aimusheva). The Kazakh subtitles, the name title and the animated slide panels were produced by the agent.
 
 ![lesson frame](examples/lesson_frame.jpg)
