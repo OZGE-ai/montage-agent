@@ -1,0 +1,17 @@
+[
+ {
+  "file": "source",
+  "role_in_video": "guest",
+  "slug": "guest",
+  "name": "Имя Фамилия",
+  "title": "Должность, организация",
+  "country": "Страна"
+ },
+ {
+  "file": "source",
+  "role_in_video": "host",
+  "slug": "host",
+  "name": "Имя Фамилия",
+  "title": "Ведущая, организация"
+ }
+]

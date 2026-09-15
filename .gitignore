@@ -1,0 +1,17 @@
+# медиа и промежуточные файлы проектов не храним в репозитории
+*.mov
+*.MOV
+*.wav
+*.m4a
+*.mp3
+work/
+source/
+output/
+raw/
+final/
+.venv/
+__pycache__/
+.env
+.DS_Store
+# демо — исключение
+!demo/*.mp4

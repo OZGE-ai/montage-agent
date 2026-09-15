@@ -1,0 +1,215 @@
+{
+ "title": "Интервью на три камеры (пример настроек)",
+ "fps": 30,
+ "language": "ru",
+ "cameras": {
+  "A": {
+   "file": "source/cam_a_wide.mov",
+   "offset": 0.0,
+   "role": "wide"
+  },
+  "B": {
+   "file": "source/cam_b_guest.mov",
+   "offset": 7.928,
+   "role": "guest_close"
+  },
+  "C": {
+   "file": "source/cam_c_host.mov",
+   "offset": -9.094,
+   "role": "host_close"
+  }
+ },
+ "host_segments": [
+  2,
+  3,
+  4,
+  5,
+  10,
+  11
+ ],
+ "edits": {
+  "повтор/оговорка": [
+   172.9,
+   [
+    612.5,
+    614.0
+   ]
+  ],
+  "паразит": [
+   211.48,
+   211.7,
+   211.82
+  ],
+  "по смыслу": [
+   [
+    951.9,
+    968.9
+   ]
+  ]
+ },
+ "body": {
+  "first_word": "Добрый",
+  "last_word": "спасибо",
+  "last_word_near": 987.0,
+  "end_before_stop": 989.05,
+  "intro_last_word": "видеть"
+ },
+ "triggers_order": [
+  "t1",
+  "t2"
+ ],
+ "triggers": [
+  {
+   "id": "t1",
+   "clip": [
+    120.0,
+    126.5
+   ],
+   "lines": [
+    [
+     "сегодня",
+     "l"
+    ],
+    [
+     "40%",
+     "a",
+     190
+    ],
+    [
+     "ПРОЕКТОВ",
+     "k"
+    ],
+    [
+     "не доживают до",
+     "l"
+    ],
+    [
+     "ВТОРОГО ГОДА",
+     "k"
+    ]
+   ],
+   "layout": [
+    [
+     0
+    ],
+    [
+     1
+    ],
+    [
+     2
+    ],
+    [
+     3
+    ],
+    [
+     4
+    ]
+   ]
+  },
+  {
+   "id": "t2",
+   "clip": [
+    410.0,
+    415.2
+   ],
+   "lines": [
+    [
+     "главное —",
+     "l"
+    ],
+    [
+     "НЕ ДЕНЬГИ,",
+     "a",
+     130
+    ],
+    [
+     "а",
+     "l"
+    ],
+    [
+     "КОМАНДА",
+     "k"
+    ]
+   ],
+   "layout": [
+    [
+     0
+    ],
+    [
+     1
+    ],
+    [
+     2,
+     3
+    ]
+   ]
+  }
+ ],
+ "crops": {
+  "A": "scale=1920:1080:flags=lanczos,setsar=1",
+  "B": "scale=1920:1080:flags=lanczos,setsar=1",
+  "C": "crop=2000:1125:560:288,scale=1920:1080:flags=lanczos,setsar=1"
+ },
+ "face_regions_wide": {
+  "guest": [
+   0,
+   200,
+   1200,
+   675
+  ],
+  "host": [
+   1360,
+   250,
+   1200,
+   675
+  ]
+ },
+ "face_region_host_close": [
+  760,
+  250,
+  1100,
+  900
+ ],
+ "event_clips": {
+  "expo": {
+   "file": "source/event/expo.mov",
+   "start": 1.0,
+   "frames": 48
+  },
+  "kuy": {
+   "file": "source/event/kuy.mov",
+   "start": 5.25,
+   "frames": 97
+  }
+ },
+ "music": {
+  "intro": {
+   "file": "assets/music/intro.wav",
+   "start": 5.36,
+   "gain": 0.62
+  },
+  "kuy": "assets/music/kuy_live.wav",
+  "kuy_gain": 3.9,
+  "outro_gain": 3.6,
+  "outro_start": 0.597,
+  "transition_sfx": "assets/sfx/chuh.wav"
+ },
+ "brand": {
+  "font": "assets/fonts/Montserrat.ttf",
+  "red": [
+   200,
+   16,
+   46
+  ],
+  "summit_title": [
+   "МЕЖДУНАРОДНЫЙ САММИТ",
+   "СОЦИАЛЬНЫХ ПРЕДПРИНИМАТЕЛЕЙ",
+   "АСТАНА · 2026"
+  ],
+  "outro_line": "«Әлеуметтік инновациялық хаб» қолдауымен жасалды",
+  "outro_top_logo": "assets/logos/partner_white.png",
+  "outro_bottom_logo": "assets/logos/studio_white.png"
+ },
+ "speakers": "data/speakers.json",
+ "_comment": "Пример. Все времена — по камере A. edits: время начала слова из work/words_verbatim.json или диапазон [от, до]. triggers.lines: [текст, стиль k|a|l, размер]; слова на экране должны совпадать со словами в речи этого отрезка. Фразы и времена здесь условные; реальные настройки проекта заказчика в репозиторий не выкладываются."
+}

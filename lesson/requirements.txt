@@ -1,0 +1,20 @@
+# Окружение монтажа. Пересобрать после пропажи .venv:
+#
+#   cd ~/Downloads/asi-montage-06
+#   /opt/homebrew/bin/python3.11 -m venv .venv
+#   .venv/bin/pip install -r tools/requirements.txt
+#   .venv/bin/playwright install chromium      # только если пропал кеш браузера
+#
+# ⚠️ Системный /usr/bin/python3 на этой машине — 3.9.6, он не годится.
+# Берём python3.11 из Homebrew.
+#
+# Кеши лежат ОТДЕЛЬНО от папки урока и при пропаже .venv обычно целы:
+#   ~/.cache/huggingface        — модели whisper, 4,4 ГБ (иначе качать заново)
+#   ~/Library/Caches/ms-playwright — chromium для рендера плашек и панелей
+#
+# Версии на 14.09.2026, проверены на всех шагах пайплайна.
+pillow==12.3.0
+numpy==2.4.6
+pymupdf==1.28.2
+playwright==1.62.0
+faster-whisper==1.2.1

@@ -1,0 +1,8 @@
+# Режим «интервью» (interview/). Python 3.11, ffmpeg ≥ 6 в PATH.
+numpy==1.26.4
+scipy==1.17.1
+soundfile==0.14.0
+pillow==12.3.0
+mediapipe==0.10.21
+faster-whisper==1.2.1
+# Режим «урок» (lesson/) — свои зависимости в lesson/requirements.txt (playwright, pymupdf)
