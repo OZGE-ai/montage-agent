@@ -136,6 +136,11 @@ python -m pytest tests/ -q
 - Музыка в демо-уроке: *Inspired* — Kevin MacLeod (incompetech.com), CC BY 4.0.
 - Звук перехода «чух» и запасная напряжённая музыка синтезируются кодом (`sfx.py`, `music_tension.py`) — без сторонних сэмплов.
 
+## Другие проекты Ozge media
+
+- [montage-pipeline](https://github.com/OZGE-ai/montage-pipeline) — автомонтаж «говорящей головы» и шортсов на Remotion
+- [ozge-ai-agents](https://github.com/OZGE-ai/ozge-ai-agents) — ИИ-агенты для контента и маркетинга, веб-приложения
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE).

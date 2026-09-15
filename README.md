@@ -138,6 +138,11 @@ Code comments and console messages are in Russian — the tool was built for a R
 - Music in the demo lesson: *Inspired* — Kevin MacLeod (incompetech.com), CC BY 4.0.
 - The transition whoosh and the fallback tension music are synthesised in code (`sfx.py`, `music_tension.py`) — no third-party samples.
 
+## Other projects by Ozge media
+
+- [montage-pipeline](https://github.com/OZGE-ai/montage-pipeline) — auto-editing of talking-head videos and shorts with Remotion
+- [ozge-ai-agents](https://github.com/OZGE-ai/ozge-ai-agents) — Claude agents for content and marketing, web apps
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
