@@ -68,7 +68,7 @@ The rules come from real client feedback ([docs/editing_rules.md](docs/editing_r
 - **Wide shot only while the host is listening to the guest**, not while she is reading questions from her notes.
 - **The centre-of-frame decor** (traditional *körpe* quilts) appears only in wide shots; the host's close-up is cropped to exclude it.
 - **No jarring close–wide–close jumps.** Every cut is a soft 0.2–0.3 s dissolve.
-- **Cold open in the style of *The Diary Of A CEO*:** 4 strong quotes (a number, a conflict, a personal admission), zoom transitions with a whoosh, music chosen by the client.
+- **Cold open in the style of *The Diary Of A CEO*:** 4 strong quotes (a number, a conflict, a personal admission), hard cuts with a whoosh — crisp frames, no smeared zoom transitions, music chosen by the client.
 - **Pauses over 0.4 s → ~0.25 s; hesitations → 0.2 s; filler words and false starts are removed**, and the text at every cut is checked.
 
 Cold-open typography — words appear exactly when they are spoken (illustration, example phrase):

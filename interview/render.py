@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Шаг 9. Сборка ролика: перебивка (фразы-триггеры переходят «зумом» со звуком «чух», под ними музыка) → заставка на видео
+"""Шаг 9. Сборка ролика: перебивка (фразы-триггеры идут встык, чёткой склейкой со звуком «чух», под ними музыка) → заставка на видео
 мероприятия под күй → интервью (все склейки — мягкое растворение, плашки ФИО) → финал на синем.
 
     python interview/render.py --plan     # только посчитать план
@@ -34,7 +34,7 @@ TRIG = {t["id"]: t for t in CFG["triggers"]}
 ORDER = CFG["triggers_order"]
 INTRO = [dict(name=f"i{k}_{tid}", kind="trigger", clip=TRIG[tid]["clip"][0], layer=RR + f"layer_{tid}.mov") for k, tid in enumerate(ORDER)]
 INTRO += [dict(name="i8_expo", kind="event", ev="expo", layer_off=0), dict(name="i9_kuy", kind="event", ev="kuy", layer_off=EV["expo"]["frames"])]
-TRANS = ["zoomin"] * len(ORDER) + ["fade"]; TD = [D_TR] * len(ORDER) + [D_TITLE]
+TD = [0] * (len(ORDER) + 1)          # прямые склейки: чёткий кадр, без наезда и размытия; динамику держит звук «чух»
 
 
 def encode_intro_part(j):
@@ -64,13 +64,19 @@ def encode_intro():
     for j in INTRO: encode_intro_part(j)
     lens, starts, total = intro_layout(); out = SEG + "000_intro.mp4"
     if done(out): return total
-    cmd = ["ffmpeg", "-v", "error", "-y"]
-    for j in INTRO: cmd += ["-i", SEG + j["name"] + ".mp4"]
-    fc, last, acc = "", "0:v", lens[0]
-    for i in range(1, len(INTRO)):
-        fc += f"[{last}][{i}:v]xfade=transition={TRANS[i-1]}:duration={TD[i-1]/FPS:.4f}:offset={(acc - TD[i-1]) / FPS:.4f}[x{i}];"
-        last = f"x{i}"; acc += lens[i] - TD[i - 1]
-    run(cmd + ["-filter_complex", fc + f"[{last}]format=yuv420p[o]", "-map", "[o]", "-frames:v", str(total)] + X264 + [out])
+    if all(d == 0 for d in TD):                       # прямые склейки — просто склеиваем куски
+        lst = RR + "concat_intro.txt"
+        with open(lst, "w") as f:
+            for j in INTRO: f.write(f"file '{SEG}{j['name']}.mp4'\n")
+        run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", out])
+    else:
+        cmd = ["ffmpeg", "-v", "error", "-y"]
+        for j in INTRO: cmd += ["-i", SEG + j["name"] + ".mp4"]
+        fc, last, acc = "", "0:v", lens[0]
+        for i in range(1, len(INTRO)):
+            fc += f"[{last}][{i}:v]xfade=transition=fade:duration={TD[i-1]/FPS:.4f}:offset={(acc - TD[i-1]) / FPS:.4f}[x{i}];"
+            last = f"x{i}"; acc += lens[i] - TD[i - 1]
+        run(cmd + ["-filter_complex", fc + f"[{last}]format=yuv420p[o]", "-map", "[o]", "-frames:v", str(total)] + X264 + [out])
     return total
 
 
@@ -131,7 +137,7 @@ def build_audio(intro_total):
     outro_f = nfr(RR + "layer_outro.mov"); body_f = sum(j["n"] for j in jobs)
     total = (intro_total + body_f + outro_f) * SPF
     speech = np.zeros(total, np.float32); music = np.zeros(total, np.float32)
-    XF = int(D_TR / FPS * SR)
+    XF = max(int(D_TR / FPS * SR), int(0.06 * SR))
     for j, s0, ln in zip(INTRO, starts, lens):                       # фразы перебивки
         if j["kind"] != "trigger": continue
         n = ln * SPF; x = A[int(round(j["clip"] * SR)):int(round(j["clip"] * SR)) + n].copy()
@@ -141,7 +147,7 @@ def build_audio(intro_total):
     env = np.ones(len(m), np.float32); env[-int(0.6 * SR):] = np.linspace(1, 0, int(0.6 * SR)); env[:960] = np.linspace(0, 1, 960)
     music[:len(m)] += m * env * MUS["intro"]["gain"]
     CH = sf.read(P + MUS["transition_sfx"], dtype="float32")[0]
-    for i in range(1, len(ORDER) + 1):                                # «чух» в середине каждого перехода
+    for i in range(1, len(ORDER) + 1):                                # «чух»: пик приходится ровно на склейку
         s0 = int((starts[i] + TD[i - 1] / 2) / FPS * SR) - int(0.45 * SR); music[s0:s0 + len(CH)] += CH * (1.4 if i == len(ORDER) else 1.1)
     K = sf.read(P + MUS["kuy"], dtype="float32")[0]; K = K.mean(1) if K.ndim > 1 else K
     kk = K[int((EV["kuy"]["start"] - (starts[-1] - title_f) / FPS) * SR):]; L = min(len(kk), total - t0)   # күй синхронно с видео ансамбля
