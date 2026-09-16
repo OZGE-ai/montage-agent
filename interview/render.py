@@ -141,7 +141,11 @@ def build_audio(intro_total):
     for j, s0, ln in zip(INTRO, starts, lens):                       # фразы перебивки
         if j["kind"] != "trigger": continue
         n = ln * SPF; x = A[int(round(j["clip"] * SR)):int(round(j["clip"] * SR)) + n].copy()
-        k = int(0.03 * SR); x[:k] *= np.linspace(0, 1, k); x[-XF:] *= np.linspace(1, 0, XF); speech[s0 * SPF:s0 * SPF + n] += x
+        k = int(0.03 * SR)
+        if s0 == starts[0] and MUS["intro"].get("lead"):      # разгон: в начале только музыка, речь входит плавно
+            k = int(MUS["intro"]["lead"] * SR); x[:k] *= np.linspace(0, 1, k) ** 2
+        else: x[:k] *= np.linspace(0, 1, k)
+        x[-XF:] *= np.linspace(1, 0, XF); speech[s0 * SPF:s0 * SPF + n] += x
     M = sf.read(P + MUS["intro"]["file"], dtype="float32")[0]; M = M.mean(1) if M.ndim > 1 else M
     t0 = title_f * SPF; m = M[int(MUS["intro"]["start"] * SR):int(MUS["intro"]["start"] * SR) + t0 + int(0.6 * SR)]
     env = np.ones(len(m), np.float32); env[-int(0.6 * SR):] = np.linspace(1, 0, int(0.6 * SR)); env[:960] = np.linspace(0, 1, 960)
